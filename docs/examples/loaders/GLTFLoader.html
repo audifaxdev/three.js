@@ -32,7 +32,17 @@
 			<li>KHR_materials_pbrSpecularGlossiness</li>
 			<li>KHR_materials_unlit</li>
 			<li>KHR_lights_punctual (experimental)</li>
+			<li>KHR_texture_transform<sup>*</sup></li>
+			<li>MSFT_texture_dds</li>
 		</ul>
+
+		<p><i>
+			<sup>*</sup>UV transforms are supported, with several key limitations in comparison to the
+			glTF specification. A transform is applied to all textures using that UV set on the current
+			material, and no more than one transform may be used per material. Each transform will result
+			in an additional GPU texture upload. See #[link:https://github.com/mrdoob/three.js/pull/13831 13831]
+			and #[link:https://github.com/mrdoob/three.js/issues/12788 12788].
+		</i></p>
 
 		<h2>Example</h2>
 
