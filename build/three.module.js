@@ -59,6 +59,8 @@ if ( Object.assign === undefined ) {
 
 		Object.assign = function ( target ) {
 
+			'use strict';
+
 			if ( target === undefined || target === null ) {
 
 				throw new TypeError( 'Cannot convert undefined or null to object' );
@@ -22907,8 +22909,6 @@ function WebGLRenderer( parameters ) {
 						_vector3.setFromMatrixPosition( object.matrixWorld )
 							.applyMatrix4( _projScreenMatrix );
 
-						var material = object.material;
-
 					}
 
 					var geometry = objects.update( object );
@@ -30609,7 +30609,7 @@ CircleBufferGeometry.prototype.constructor = CircleBufferGeometry;
 
 
 
-var Geometries = /*#__PURE__*/Object.freeze({
+var Geometries = Object.freeze({
 	WireframeGeometry: WireframeGeometry,
 	ParametricGeometry: ParametricGeometry,
 	ParametricBufferGeometry: ParametricBufferGeometry,
@@ -31388,7 +31388,7 @@ LineDashedMaterial.prototype.copy = function ( source ) {
 
 
 
-var Materials = /*#__PURE__*/Object.freeze({
+var Materials = Object.freeze({
 	ShadowMaterial: ShadowMaterial,
 	SpriteMaterial: SpriteMaterial,
 	RawShaderMaterial: RawShaderMaterial,
@@ -32067,7 +32067,6 @@ Object.assign( DataTextureLoader.prototype, {
  * @author mrdoob / http://mrdoob.com/
  */
 
-
 function ImageLoader( manager ) {
 
 	this.manager = ( manager !== undefined ) ? manager : DefaultLoadingManager;
@@ -32170,7 +32169,6 @@ Object.assign( ImageLoader.prototype, {
  * @author mrdoob / http://mrdoob.com/
  */
 
-
 function CubeTextureLoader( manager ) {
 
 	this.manager = ( manager !== undefined ) ? manager : DefaultLoadingManager;
@@ -32240,7 +32238,6 @@ Object.assign( CubeTextureLoader.prototype, {
 /**
  * @author mrdoob / http://mrdoob.com/
  */
-
 
 function TextureLoader( manager ) {
 
@@ -32962,7 +32959,9 @@ function CubicPoly() {
 //
 
 var tmp = new Vector3();
-var px = new CubicPoly(), py = new CubicPoly(), pz = new CubicPoly();
+var px = new CubicPoly();
+var py = new CubicPoly();
+var pz = new CubicPoly();
 
 function CatmullRomCurve3( points, closed, curveType, tension ) {
 
@@ -33747,7 +33746,7 @@ SplineCurve.prototype.fromJSON = function ( json ) {
 
 
 
-var Curves = /*#__PURE__*/Object.freeze({
+var Curves = Object.freeze({
 	ArcCurve: ArcCurve,
 	CatmullRomCurve3: CatmullRomCurve3,
 	CubicBezierCurve: CubicBezierCurve,
@@ -34891,6 +34890,79 @@ var AnimationUtils = {
 
 		}
 
+	},
+
+	subclip: function ( sourceClip, name, startFrame, endFrame, fps ) {
+
+		fps = fps || 30;
+
+		var clip = sourceClip.clone();
+
+		clip.name = name;
+
+		var tracks = [];
+
+		for ( var i = 0; i < clip.tracks.length; ++ i ) {
+
+			var track = clip.tracks[ i ];
+			var valueSize = track.getValueSize();
+
+			var times = [];
+			var values = [];
+
+			for ( var j = 0; j < track.times.length; ++ j ) {
+
+				var frame = track.times[ j ] * fps;
+
+				if ( frame < startFrame || frame >= endFrame ) continue;
+
+				times.push( track.times[ j ] );
+
+				for ( var k = 0; k < valueSize; ++ k ) {
+
+					values.push( track.values[ j * valueSize + k ] );
+
+				}
+
+			}
+
+			if ( times.length === 0 ) continue;
+
+			track.times = AnimationUtils.convertArray( times, track.times.constructor );
+			track.values = AnimationUtils.convertArray( values, track.values.constructor );
+
+			tracks.push( track );
+
+		}
+
+		clip.tracks = tracks;
+
+		// find minimum .times value across all tracks in the trimmed clip
+
+		var minStartTime = Infinity;
+
+		for ( var i = 0; i < clip.tracks.length; ++ i ) {
+
+			if ( minStartTime > clip.tracks[ i ].times[ 0 ] ) {
+
+				minStartTime = clip.tracks[ i ].times[ 0 ];
+
+			}
+
+		}
+
+		// shift all tracks such that clip begins at t=0
+
+		for ( var i = 0; i < clip.tracks.length; ++ i ) {
+
+			clip.tracks[ i ].shift( -1 * minStartTime );
+
+		}
+
+		clip.resetDuration();
+
+		return clip;
+
 	}
 
 };
@@ -35808,6 +35880,21 @@ Object.assign( KeyframeTrack.prototype, {
 
 		return this;
 
+	},
+
+	clone: function () {
+
+		var times = AnimationUtils.arraySlice( this.times, 0 );
+		var values = AnimationUtils.arraySlice( this.values, 0 );
+
+		var TypedKeyframeTrack = this.constructor;
+		var track = new TypedKeyframeTrack( this.name, times, values );
+
+		// Interpolant argument to constructor is not saved, so copy the factory method directly.
+		track.createInterpolant = this.createInterpolant;
+
+		return track;
+
 	}
 
 } );
@@ -36458,6 +36545,20 @@ Object.assign( AnimationClip.prototype, {
 		}
 
 		return this;
+
+	},
+
+	clone: function () {
+
+		var tracks = [];
+
+		for ( var i = 0; i < this.tracks.length; i ++ ) {
+
+			tracks.push( this.tracks[ i ].clone() );
+
+		}
+
+		return new AnimationClip( this.name, this.duration, tracks );
 
 	}
 
@@ -38574,7 +38675,6 @@ var TEXTURE_FILTER = {
  * @author thespite / http://clicktorelease.com/
  */
 
-
 function ImageBitmapLoader( manager ) {
 
 	if ( typeof createImageBitmap === 'undefined' ) {
@@ -38959,7 +39059,6 @@ Object.assign( ShapePath.prototype, {
  * @author zz85 / http://www.lab4games.net/zz85/blog
  * @author mrdoob / http://mrdoob.com/
  */
-
 
 function Font( data ) {
 
@@ -42408,8 +42507,6 @@ AnimationMixer.prototype = Object.assign( Object.create( EventDispatcher.prototy
 
 		remove_empty_map: {
 
-			for ( var _ in bindingByName ) break remove_empty_map; // eslint-disable-line no-unused-vars
-
 			delete bindingsByRoot[ rootUuid ];
 
 		}
@@ -44939,7 +45036,8 @@ PlaneHelper.prototype.updateMatrixWorld = function ( force ) {
  *  headWidth - Number
  */
 
-var lineGeometry, coneGeometry;
+var lineGeometry;
+var coneGeometry;
 
 function ArrowHelper( dir, origin, length, color, headLength, headWidth ) {
 
