@@ -162,25 +162,22 @@ var AnimationUtils = {
 
 	clone: function ( source ) {
 
-		var sourceLookup = new Map();
 		var cloneLookup = new Map();
 
 		var clone = source.clone();
 
 		parallelTraverse( source, clone, function ( sourceNode, clonedNode ) {
 
-			sourceLookup.set( clonedNode, sourceNode );
 			cloneLookup.set( sourceNode, clonedNode );
 
 		} );
 
-		clone.traverse( function ( node ) {
+		source.traverse( function ( sourceMesh ) {
 
-			if ( ! node.isSkinnedMesh ) return;
+			if ( ! sourceMesh.isSkinnedMesh ) return;
 
-			var clonedMesh = node;
-			var sourceMesh = sourceLookup.get( node );
 			var sourceBones = sourceMesh.skeleton.bones;
+			var clonedMesh = cloneLookup.get( sourceMesh );
 
 			clonedMesh.skeleton = sourceMesh.skeleton.clone();
 
@@ -190,7 +187,7 @@ var AnimationUtils = {
 
 			} );
 
-			clonedMesh.bind( clonedMesh.skeleton, clonedMesh.bindMatrix );
+			clonedMesh.bind( clonedMesh.skeleton, sourceMesh.bindMatrix );
 
 		} );
 
